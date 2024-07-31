@@ -17,6 +17,9 @@ use Inertia\Inertia;
 // });
 
 Route::get('/', [RomanNumberController::class, 'index'])->name('site.index');
+Route::post('/converter-para-romano', [RomanNumberController::class, 'convertToRoman'])->name('site.convertToRoman');
+Route::post('/converter-para-arabico', [RomanNumberController::class, 'convertToArabic'])->name('site.convertToArabic');
+
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
