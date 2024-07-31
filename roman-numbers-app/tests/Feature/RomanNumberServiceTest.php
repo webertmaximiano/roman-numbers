@@ -8,6 +8,7 @@ use Tests\TestCase;
 use App\Services\RomanNumberService;
 use App\Models\RomanNumber;
 use Database\Seeders\RomanNumberAndArabicSeeder;
+use InvalidArgumentException;
 
 
 class RomanNumberServiceTest extends TestCase
@@ -26,6 +27,7 @@ class RomanNumberServiceTest extends TestCase
 
     public function test_convertToRoman()
     {
+        //instanciando a classe de servico
         $service = new RomanNumberService();
 
         $this->assertEquals('I', $service->convertToRoman(1));
@@ -48,5 +50,19 @@ class RomanNumberServiceTest extends TestCase
         $this->assertEquals(2021, $service->convertToArabic('MMXXI'));
     }
 
+    public function test_invalidRomanNumeral()
+    {
+        $this->expectException(\InvalidArgumentException::class);
 
+        $service = new RomanNumberService();
+        $service->convertToArabic('IIII'); // Número romano inválido regra nao pode se repetir mais de 3 vezes
+    }
+
+    public function test_invalidRomanNumeral2()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $service = new RomanNumberService();
+        $service->convertToArabic('xxxxx'); // Número romano inválido regra nao pode se repetir mais de 3 vezes
+    }
 }

@@ -9,17 +9,23 @@
 3- No princípio aditivo, quando duas letras são diferentes e a de maior valor antecede a de menor valor, somam-se os seus valores. Exemplo: VI (5 + 1) = 6 e LIII (50 + 3) = 53; 
 
 4- Colocando-se um traço sobre uma ou mais letras, seu valor é multiplicado por 1.000;
-namespace Database\Seeders;
 https://www.educamaisbrasil.com.br/enem/matematica/numeros-romanos
 */
 namespace App\Services;
 
 use App\Models\RomanNumber;
 use Illuminate\Support\Facades\Cache;
+use InvalidArgumentException;
 
 class RomanNumberService
 {
-    public function convertToRoman($arabic)
+    /**
+     * Converte um número arabico em número romano.
+     *
+     * @param int $arabic
+     * @return string
+     */
+    public function convertToRoman($arabic): string
     {
         // Verificar cache primeiro
         $cacheKey = 'roman_' . $arabic;
@@ -44,7 +50,13 @@ class RomanNumberService
         return $result;
     }
 
-    public function convertToArabic($roman)
+    /**
+     * Converte um número romano em número arabico.
+     *
+     * @param string $roman
+     * @return int
+     */
+    public function convertToArabic($roman): int
     {
         // Verificar cache primeiro
         $cacheKey = 'arabic_' . $roman;
@@ -54,6 +66,11 @@ class RomanNumberService
 
         // Garantir que o número romano esteja em maiúsculo
         $roman = strtoupper($roman);
+
+        // Verifique se o número romano é válido de acordo com as regras
+        if (!$this->isValidRomanNumber($roman)) {
+            throw new InvalidArgumentException("Número Romano Inválido: " . $roman);
+        }
 
         // Carrega todos os registros dos números
         $romanNumerals = RomanNumber::all();
@@ -73,12 +90,13 @@ class RomanNumberService
                 $result += $romanToArabic[$symbol . $nextSymbol];
                 $i += 2; // Passa para o próximo símbolo
             } elseif (isset($romanToArabic[$symbol])) {
-                // Caso contrário, use apenas o símbolo atual
+                // Princípio aditivo: soma o valor do símbolo atual ao resultado
                 $result += $romanToArabic[$symbol];
                 $i++;
             } else {
                 // Lida com números inválidos
-                throw new \InvalidArgumentException("Número Romano Inválido: $roman");
+                throw new \InvalidArgumentException("Número Romano Inválido: ". $roman);
+
             }
         }
 
@@ -87,4 +105,31 @@ class RomanNumberService
 
         return $result;
     }
+
+    /**
+     * Verifica se o número romano informado é válido com base nas regras dos números romanos.
+     *
+     * @param string $roman
+     * @return bool
+     */
+    private function isValidRomanNumber($roman): bool
+    {
+        // Verifica se contém apenas caracteres romanos válidos
+        if (!preg_match('/^[IVXLCDM]+$/', $roman)) {
+            return false;
+        }
+
+        // Verifica se o número romano segue as regras tradicionais
+        $patterns = [
+            'M{0,3}',              // 1000 - 3000
+            '(CM|CD|D?C{0,3})',    // 900, 400, 0-300
+            '(XC|XL|L?X{0,3})',    // 90, 40, 0-30
+            '(IX|IV|V?I{0,3})'     // 9, 4, 0-8
+        ];
+
+        $regex = '/^' . implode('', $patterns) . '$/';
+
+        return preg_match($regex, $roman);
+    }
+
 }
