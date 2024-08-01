@@ -29,6 +29,7 @@ class RomanNumberService
     {
         // Verificar cache primeiro
         $cacheKey = 'roman_' . $arabic;
+
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
@@ -74,7 +75,7 @@ class RomanNumberService
 
         // Carrega todos os registros dos números
         $romanNumerals = RomanNumber::all();
-        
+
         //transforma a colecao em um array associativo onde as chaves são os números romanos e os valores são os números arábicos correspondentes.
         $romanToArabic = $romanNumerals->pluck('arabic', 'roman')->toArray();
 

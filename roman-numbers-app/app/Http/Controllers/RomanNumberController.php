@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Route;
 
 class RomanNumberController extends Controller
 {
-    protected $romanNumberService;
+    protected $service;
 
     // Injeção de dependência via construtor
-    public function __construct(RomanNumberService $romanNumberService)
+    public function __construct(RomanNumberService $service)
     {
-        $this->romanNumberService = $romanNumberService;
+        $this->service = $service;
     }
 
     public function index() {
@@ -31,7 +31,17 @@ class RomanNumberController extends Controller
     public function convertToRoman(Request $request): string
     {
         //validar se o valor e um numero inteiro
-        dd($request->value);
+        $validated = $request->validate([
+            'value' => 'required|integer|min:1'
+        ]);
+
+        $roman = $this->service->convertToRoman($validated['value']);
+        // Retorne o resultado 
+        //return response()->json(['roman' => $roman]); 
+        return back()->with([
+            'success' => 'Numero convertido com Suvesso',
+            'roman' => $roman
+        ]);
     }
 
     public function convertToArabic(Request $request): int

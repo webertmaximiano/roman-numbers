@@ -1,5 +1,6 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, watch, onMounted } from 'vue'
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -20,7 +21,20 @@ defineProps({
         type: String,
         required: true,
     },
+    roman: {
+        type: String,
+    },
+    arabic: {
+        type: Number,
+    },
+    flash: {
+        type: String,
+    }
+
 });
+
+// mensagens
+const flash = usePage().props.flash || null;
 
 function handleImageError() {
     document.getElementById('screenshot-container')?.classList.add('!hidden');
@@ -33,8 +47,31 @@ const form = useForm({
     value: ''
 });
 
+//resposta em romano
+const roman = ref(usePage().props.roman || null);
 
+//resposta em arabico
+const arabic = ref(usePage().props.arabic || null);
 
+//aciona a rota de conversao para romano
+const convertToRoman = () => {
+    form.post(route('site.convertToRoman'), {
+        onSuccess: () => {
+            console.log('Numero Romano', roman.value)
+        },
+        onFinish: () => form.reset('value'),
+    });
+};
+
+//aciona a rota de conversao para arabico
+const convertToArabic = () => {
+    form.post(route('site.convertToArabic'), {
+        onSuccess: () => {
+            console.log('Numero Arabico', arabic.value)
+        },
+        onFinish: () => form.reset('value'),
+    });
+};
 </script>
 
 <template>
@@ -72,6 +109,14 @@ const form = useForm({
 
                 <main class="mt-6">
                     <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
+                        <Transition
+                            enter-active-class="transition ease-in-out"
+                            enter-from-class="opacity-0"
+                            leave-active-class="transition ease-in-out"
+                            leave-to-class="opacity-0"
+                        >
+                            <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">{{ success }}</p>
+                        </Transition>
                         <a href="https://www.educamaisbrasil.com.br/enem/matematica/numeros-romanos" id="docs-card"
                             class="flex flex-col items-start gap-6 overflow-hidden rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] md:row-span-3 lg:p-10 lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]">
                             <div id="screenshot-container" class="relative flex w-full flex-1 items-stretch">
@@ -204,7 +249,7 @@ const form = useForm({
                                 <h2 class="text-xl font-semibold text-black dark:text-white">Informe um Número Arábico
                                 </h2>
 
-                                <form @submit.prevent="form.post(route('site.convertToRoman'))" class="mt-6 space-y-6">
+                                <form @submit.prevent="convertToRoman" class="mt-6 space-y-6">
                                     <div>
                                         <InputLabel for="convertToRoman"
                                             value="Exemplo de Número Arábico: 1, 2, 3 ..." />
@@ -241,7 +286,7 @@ const form = useForm({
                                 <h2 class="text-xl font-semibold text-black dark:text-white">Informe um Número Romano
                                 </h2>
 
-                                <form @submit.prevent="form.post(route('site.convertToArabic'))" class="mt-6 space-y-6">
+                                <form @submit.prevent="convertToArabic" class="mt-6 space-y-6">
                                     <div>
                                         <InputLabel for="convertToArabic"
                                             value="Exemplo de Número Arábico: 1, 2, 3 ..." />
