@@ -1,25 +1,39 @@
 <script setup>
 //import { ref, watch, onMounted } from 'vue'
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 
+//definindo o evento
+const emit = defineEmits(['conversion']);
+
 const form = useForm({
-    value: ''
+    value: '' 
 });
 
-
-const convertToRoman = () => {
+const convertToRoman = async () => {
     form.post(route('site.convertToRoman'), {
-        preserveState: true,
-        onSuccess: () => {
-            showModal.value = true; // Mostra o modal em caso de sucesso
+        preserveScroll: true,
+        onSuccess: (page) => {
+            const result = page.props.result;
+            console.log('Resposta no Card', result)
+            // Emitir evento de conversão para SiteIndex
+            emit('conversion', 'Conversão para número romano realizada com sucesso!', result, null);
+            form.reset();
         },
-        onFinish: () => form.reset('value'),
+        onError: (errors) => {
+            console.log('Erro no Card', errors);
+            if (errors && errors.value === 'The value field must be at least 1.') {
+                errors.value = 'Numero precisa ser maior que 0'
+            }
+            emit('conversion', 'Erro: número inválido!', null, errors);
+        },
+
     });
 };
+
 </script>
 <template>
     <div

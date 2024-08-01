@@ -10,13 +10,30 @@ const form = useForm({
     value: ''
 });
 
-const convertToArabic = () => {
+//definindo o evento
+const emit = defineEmits(['conversion']);
+
+const convertToArabic = async () => {
+
     form.post(route('site.convertToArabic'), {
-        preserveState: true,
-        onSuccess: () => {
-            showModal.value = true; // Mostra o modal em caso de sucesso
+        preserveScroll: true,
+        onSuccess: (page) => {
+            const result = page.props.result;
+            console.log('result convertToArabic', result);
+
+            // Emitir evento de conversão com a mensagem apropriada
+            // Verificar se o result é uma string (erro) ou um número (sucesso)
+            if (typeof result === 'string') {
+                emit('conversion', result, null, null);
+            } else {
+                emit('conversion', 'Conversão para número arábico realizada com sucesso!', result, null);
+            }
+            form.reset();
         },
-        onFinish: () => form.reset('value'),
+        onError: (errors) => {
+            console.log('Erro no Card', errors);
+            emit('conversion', 'Erro: número romano inválido!', null, errors);
+        },
     });
 };
 </script>
@@ -37,12 +54,12 @@ const convertToArabic = () => {
 
             <form @submit.prevent="convertToArabic" class="mt-6 space-y-6">
                 <div>
-                    <InputLabel for="convertToArabic" value="Exemplo de Número Arábico: 1, 2, 3 ..." />
+                    <InputLabel for="convertToArabic" value="Exemplo de Número Romano: I, V, X ..." />
 
-                    <TextInput id="name" type="text" class="mt-1 block w-full" v-model="form.value" required autofocus
-                        autocomplete="name" />
+                    <TextInput id="convertToArabic" type="text" class="mt-1 block w-full" v-model="form.value" required autofocus
+                        autocomplete="convertToArabic" />
 
-                    <InputError class="mt-2" :message="form.errors.roman" />
+                    <InputError class="mt-2" :message="form.errors.value" />
                 </div>
                 <PrimaryButton class=" ml-4 shrink-0 self-center stroke-[#FF2D20]" :disabled="form.processing">
                     <svg class="size-6 shrink-0 self-center stroke-[#FF2D20]" xmlns="http://www.w3.org/2000/svg"

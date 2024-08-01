@@ -19,33 +19,58 @@ class RomanNumberController extends Controller
         $this->service = $service;
     }
 
-    public function index() {
+    public function index(Request $request) {
+
+
         return Inertia::render('SiteIndex', [
                     'canLogin' => Route::has('login'),
                      'canRegister' => Route::has('register'),
                      'laravelVersion' => Application::VERSION,
                      'phpVersion' => PHP_VERSION,
+                     'roman' => null,
+                     'arabic' => null,
                  ]);
     }
 
-    public function convertToRoman(Request $request): string
+    public function convertToRoman(Request $request)
     {
         //validar se o valor e um numero inteiro
         $validated = $request->validate([
             'value' => 'required|integer|min:1'
         ]);
 
-        $roman = $this->service->convertToRoman($validated['value']);
-        // Retorne o resultado 
-        //return response()->json(['roman' => $roman]); 
-        return back()->with([
-            'success' => 'Numero convertido com Suvesso',
-            'roman' => $roman
-        ]);
+        $result= $this->service->convertToRoman($validated['value']);
+
+        return Inertia::render('SiteIndex', [
+            'canLogin' => Route::has('login'),
+             'canRegister' => Route::has('register'),
+             'laravelVersion' => Application::VERSION,
+             'phpVersion' => PHP_VERSION,
+             'result' => $result,
+         ]);
     }
 
-    public function convertToArabic(Request $request): int
+    public function convertToArabic(Request $request)
     {
-        dd($request);
+        $validated = $request->validate([
+            'value' => 'required|string'
+        ]);
+
+        try {
+            $result = $this->service->convertToArabic($validated['value']);
+
+        } catch (\InvalidArgumentException $e) {
+            
+            $result = $e->getMessage();
+            
+        }
+
+        return Inertia::render('SiteIndex', [
+            'canLogin' => Route::has('login'),
+             'canRegister' => Route::has('register'),
+             'laravelVersion' => Application::VERSION,
+             'phpVersion' => PHP_VERSION,
+             'result' => $result,
+         ]);
     }
 }

@@ -10,22 +10,39 @@ class RomanNumberAndArabicSeeder extends Seeder
 {
     public function run(): void
     {
-        $data = [
-            ['arabic' => 1000, 'roman' => 'M'],
-            ['arabic' => 900, 'roman' => 'CM'],
-            ['arabic' => 500, 'roman' => 'D'],
-            ['arabic' => 400, 'roman' => 'CD'],
-            ['arabic' => 100, 'roman' => 'C'],
-            ['arabic' => 90, 'roman' => 'XC'],
-            ['arabic' => 50, 'roman' => 'L'],
-            ['arabic' => 40, 'roman' => 'XL'],
-            ['arabic' => 10, 'roman' => 'X'],
-            ['arabic' => 9, 'roman' => 'IX'],
-            ['arabic' => 5, 'roman' => 'V'],
-            ['arabic' => 4, 'roman' => 'IV'],
-            ['arabic' => 1, 'roman' => 'I'],
+
+        $romanNumbers = [
+            // 900000 => 'C̅M̅',
+            // 500000 => 'D̅',
+            // 400000 => 'C̅D̅',
+            // 100000 => 'C̅',
+            // 90000 => 'X̅C̅',
+            // 50000 => 'L̅',
+            // 40000 => 'X̅L̅',
+            // 10000 => 'X̅',
+            // 9000 => 'I̅X̅',
+            // 5000 => 'V̅',
+            // 4000 => 'I̅V̅',
+            1000 => 'M',
+            900 => 'CM',
+            500 => 'D',
+            400 => 'CD',
+            100 => 'C',
+            90 => 'XC',
+            50 => 'L',
+            40 => 'XL',
+            10 => 'X',
+            9 => 'IX',
+            5 => 'V',
+            4 => 'IV',
+            1 => 'I'
         ];
 
-        RomanNumber::insert($data);
+        foreach ($romanNumbers as $arabic => $roman) {
+            RomanNumber::create([
+                'arabic' => $arabic,
+                'roman' => $roman
+            ]);
+        }
     }
 }

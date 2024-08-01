@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ref, watch} from 'vue'
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 
 import Logo from '@/Components/Logo.vue';
 import NavSiteIndex from '@/Components/NavSiteIndex.vue';
@@ -26,45 +26,57 @@ defineProps({
         type: String,
         required: true,
     },
-    roman: {
-        type: String,
+    result: {
+        type: String || Number,
     },
-    arabic: {
-        type: Number,
-    },
-    flash: {
-        type: String,
-    }
 });
-
-// mensagens
-const flash = usePage().props.flash || null;
 
 // handleImageError() movida para ScreenShotContainer
+const showModal = ref(false); // Controle de visibilidade do modal responsavel por exibir a resposta da conversao
+const modalMessage = ref(''); // mensagem a ser exibida no modal
+const conversionResult = ref(''); // Adicionado para armazenar o resultado
 
-//receber os valores e chamar as rotas via inertia
-const form = useForm({
-    value: ''
-});
-
-//resposta em romano
-const roman = ref(usePage().props.roman || null);
-
-//resposta em arabico
-const arabic = ref(usePage().props.arabic || null);
-
-// Controle de visibilidade do modal responsavel por exibir a resposta da conversao
-const showModal = ref(false);
-
-// fechar modal
+// Fechar modal
 const closeModal = () => {
-    showModal.value = false;
+    showModal.value = false; 
+    modalMessage.value = '';
+    conversionResult.value = '';
 };
 
-//convertToRoman() movidada para CardConvertArabicToRoman
+// Exibir modal com mensagem e resultado
+const openModal = (message, result, errors) => {
+    if (errors) {
+        console.log('Erros', errors)
+        conversionResult.value = errors
+        modalMessage.value = message;
+        showModal.value = true;
+    } else {
+        modalMessage.value = message;
+        conversionResult.value = result;
+        showModal.value = true;
+    }
+   
+};
 
+// Monitora mudanças nas props
 
-//aciona a rota de conversao para arabico convertToArabic 
+// Se os dados estiverem em session
+watch(usePage().props, (newProps) => {
+    if (newProps.flash.success) {
+        showModal.value = true;
+        modalMessage.value = newProps.flash.success;
+        conversionResult.value = newProps.result;
+    }
+    if (newProps.flash.error) {
+        showModal.value = true;
+        console.log('Erro Romano to Arabic',newProps.flash.error )
+        modalMessage.value = newProps.flash.error;
+        conversionResult.value = '';
+    }
+});
+//convertToRoman() movida  para CardConvertArabicToRoman
+
+//convertToArabic movida para CardConvertRomanToArabic
 
 </script>
 
@@ -108,10 +120,14 @@ const closeModal = () => {
                             <!-- icone da seta -->
                             <IconArrow class="size-6 shrink-0 self-center"/>
                         </a>
-                        <!-- Card Converter Arabico x Romano -->
-                        <CardConvertArabicToRoman/>
-                        <!-- Card Converter Romano x Arabico -->
-                        <CardConvertRomanToArabic/>
+                        <!-- Card Converter Arabico x Romano ouvindo evento da resposta -->
+                        <CardConvertArabicToRoman @conversion="openModal"
+                            
+                        />
+                        <!-- Card Converter Romano x Arabico ouvindo evento da resposta -->
+                        <CardConvertRomanToArabic @conversion="openModal"
+                          
+                        />
                     </div>
                 </main>
 
@@ -121,13 +137,14 @@ const closeModal = () => {
             </div>
         </div>
     </div>
-    <!-- Modal  -->
-    <Teleport to="main">
-        <div v-if="showModal" class="modal">
-            <p>Número Convertido com Sucesso </p>
-            <!-- Resposta da Conversao -->
-            <span></span>
-            <button @click="open = false">Close</button>
+   <!-- Modal -->
+   <Teleport to="body">
+        <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <p>{{ modalMessage }}</p>
+                <p v-if="conversionResult">Resultado: {{ conversionResult }}</p>
+                <button @click="closeModal" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">Fechar</button>
+            </div>
         </div>
     </Teleport>
 </template>
