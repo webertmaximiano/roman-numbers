@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { Head, usePage, useForm } from '@inertiajs/vue3';
+import { Head, usePage, useForm, router } from '@inertiajs/vue3';
 
 import Logo from '@/Components/Logo.vue';
 import NavSiteIndex from '@/Components/NavSiteIndex.vue';
@@ -22,6 +22,8 @@ const closeModal = () => {
     showModal.value = false;
     modalMessage.value = '';
     conversionResult.value = '';
+    router.get(route('site.index'));  // Redireciona para a rota inicial
+
 };
 
 const openModal = (message, result, errors) => {
@@ -110,7 +112,7 @@ const handleConversion = async (value, conversionType) => {
    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white p-8 rounded-lg shadow-lg">
             <h2 class="text-2xl font-semibold mb-4">{{ modalMessage }}</h2>
-            <p v-if="conversionResult">{{ conversionResult }}</p>
+            <p v-if="conversionResult">Resultado: {{ conversionResult }}</p>
             <PrimaryButton @click="closeModal">Fechar</PrimaryButton>
         </div>
     </div>
