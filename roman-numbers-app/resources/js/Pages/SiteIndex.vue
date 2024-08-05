@@ -1,9 +1,11 @@
 <script setup>
-import { ref, watch} from 'vue'
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
+import { Head, usePage, useForm } from '@inertiajs/vue3';
 
 import Logo from '@/Components/Logo.vue';
 import NavSiteIndex from '@/Components/NavSiteIndex.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+
 import ScreenShotContainer from './Partials/SiteIndex/ScreenShotContainer.vue';
 import DocsCardContent from './Partials/SiteIndex/DocsCardContent.vue';
 import IconArrow from './Partials/SiteIndex/IconArrow.vue';
@@ -11,72 +13,46 @@ import MainRulesRomanNumber from './Partials/SiteIndex/MainRulesRomanNumber.vue'
 import CardConvertArabicToRoman from './Partials/SiteIndex/CardConvertArabicToRoman.vue';
 import CardConvertRomanToArabic from './Partials/SiteIndex/CardConvertRomanToArabic.vue';
 
-defineProps({
-    canLogin: {
-        type: Boolean,
-    },
-    canRegister: {
-        type: Boolean,
-    },
-    laravelVersion: {
-        type: String,
-        required: true,
-    },
-    phpVersion: {
-        type: String,
-        required: true,
-    },
-    result: {
-        type: String || Number,
-    },
-});
+const form = useForm({ value: '' });
+const showModal = ref(false);
+const modalMessage = ref('');
+const conversionResult = ref('');
 
-// handleImageError() movida para ScreenShotContainer
-const showModal = ref(false); // Controle de visibilidade do modal responsavel por exibir a resposta da conversao
-const modalMessage = ref(''); // mensagem a ser exibida no modal
-const conversionResult = ref(''); // Adicionado para armazenar o resultado
-
-// Fechar modal
 const closeModal = () => {
-    showModal.value = false; 
+    showModal.value = false;
     modalMessage.value = '';
     conversionResult.value = '';
 };
 
-// Exibir modal com mensagem e resultado
 const openModal = (message, result, errors) => {
-    if (errors) {
-        console.log('Erros', errors)
-        conversionResult.value = errors
-        modalMessage.value = message;
-        showModal.value = true;
-    } else {
-        modalMessage.value = message;
-        conversionResult.value = result;
-        showModal.value = true;
-    }
-   
+    modalMessage.value = message;
+    conversionResult.value = result;
+    showModal.value = true;
 };
 
-// Monitora mudanças nas props
-
-// Se os dados estiverem em session
 watch(usePage().props, (newProps) => {
-    if (newProps.flash.success) {
-        showModal.value = true;
-        modalMessage.value = newProps.flash.success;
-        conversionResult.value = newProps.result;
-    }
-    if (newProps.flash.error) {
-        showModal.value = true;
-        console.log('Erro Romano to Arabic',newProps.flash.error )
-        modalMessage.value = newProps.flash.error;
-        conversionResult.value = '';
+    if (newProps.flash?.success) {
+        openModal(newProps.flash.success, newProps.result);
     }
 });
-//convertToRoman() movida  para CardConvertArabicToRoman
 
-//convertToArabic movida para CardConvertRomanToArabic
+const handleConversion = async (value, conversionType) => {
+    form.value = value;
+
+    form.post(route(`site.${conversionType}`), {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            const result = page.props.result;
+            openModal(`Conversão ${conversionType === 'convertToRoman' ? 'para número romano' : 'para número arábico'} realizada com sucesso!`, result);
+            form.reset();
+        },
+        onError: (errors) => {
+            const errorMessage = conversionType === 'convertToRoman' ? 'Erro: número arábico inválido!' : 'Erro: número romano inválido!';
+            openModal(errorMessage, null);
+        },
+    });
+};
+
 
 </script>
 
@@ -92,10 +68,7 @@ watch(usePage().props, (newProps) => {
                 <header class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3">
                     <!-- Logo  -->
                     <Logo />
-                    <NavSiteIndex
-                        :canLogin="canLogin"
-                        :canRegister="canRegister"
-                    />
+                   
                 </header>
 
                 <main class="mt-6">
@@ -120,33 +93,27 @@ watch(usePage().props, (newProps) => {
                             <!-- icone da seta -->
                             <IconArrow class="size-6 shrink-0 self-center"/>
                         </a>
-                        <!-- Card Converter Arabico x Romano ouvindo evento da resposta -->
-                        <CardConvertArabicToRoman @conversion="openModal"
-                            
-                        />
+                         <!-- Card Converter Arabico x Romano ouvindo evento da resposta -->
+                        <CardConvertArabicToRoman @submitValue="handleConversion" />
                         <!-- Card Converter Romano x Arabico ouvindo evento da resposta -->
-                        <CardConvertRomanToArabic @conversion="openModal"
-                          
-                        />
+                        <CardConvertRomanToArabic @submitValue="handleConversion" />
                     </div>
                 </main>
 
                 <footer class="py-16 text-center text-sm text-black dark:text-white/70">
-                    by Webert Maximiano - (21) 98176-0591 - Laravel {{ laravelVersion }} (PHP v{{ phpVersion }})
+                    by Webert Maximiano - (21) 98176-0591 - Laravel {{ usePage().props.laravelVersion }} (PHP v{{ usePage().props.phpVersion }})
                 </footer>
             </div>
         </div>
     </div>
-   <!-- Modal -->
-   <Teleport to="body">
-        <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white p-6 rounded-lg shadow-lg">
-                <p>{{ modalMessage }}</p>
-                <p v-if="conversionResult">Resultado: {{ conversionResult }}</p>
-                <button @click="closeModal" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">Fechar</button>
-            </div>
+   <!-- Modal para exibir resultados da conversão -->
+   <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4">{{ modalMessage }}</h2>
+            <p v-if="conversionResult">{{ conversionResult }}</p>
+            <PrimaryButton @click="closeModal">Fechar</PrimaryButton>
         </div>
-    </Teleport>
+    </div>
 </template>
 
 <style scoped>

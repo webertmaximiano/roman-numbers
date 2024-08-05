@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\RomanNumberService;
-
 use Inertia\Inertia;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -19,35 +18,33 @@ class RomanNumberController extends Controller
         $this->service = $service;
     }
 
-    public function index(Request $request) {
-
-
+    public function index(Request $request)
+    {
         return Inertia::render('SiteIndex', [
-                    'canLogin' => Route::has('login'),
-                     'canRegister' => Route::has('register'),
-                     'laravelVersion' => Application::VERSION,
-                     'phpVersion' => PHP_VERSION,
-                     'roman' => null,
-                     'arabic' => null,
-                 ]);
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+            'result' => null,
+        ]);
     }
 
     public function convertToRoman(Request $request)
     {
-        //validar se o valor e um numero inteiro
+        // Validar se o valor é um número inteiro
         $validated = $request->validate([
             'value' => 'required|integer|min:1'
         ]);
 
-        $result= $this->service->convertToRoman($validated['value']);
+        $result = $this->service->convertToRoman($validated['value']);
 
         return Inertia::render('SiteIndex', [
             'canLogin' => Route::has('login'),
-             'canRegister' => Route::has('register'),
-             'laravelVersion' => Application::VERSION,
-             'phpVersion' => PHP_VERSION,
-             'result' => $result,
-         ]);
+            'canRegister' => Route::has('register'),
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+            'result' => $result,
+        ]);
     }
 
     public function convertToArabic(Request $request)
@@ -58,19 +55,16 @@ class RomanNumberController extends Controller
 
         try {
             $result = $this->service->convertToArabic($validated['value']);
-
         } catch (\InvalidArgumentException $e) {
-            
             $result = $e->getMessage();
-            
         }
 
         return Inertia::render('SiteIndex', [
             'canLogin' => Route::has('login'),
-             'canRegister' => Route::has('register'),
-             'laravelVersion' => Application::VERSION,
-             'phpVersion' => PHP_VERSION,
-             'result' => $result,
-         ]);
+            'canRegister' => Route::has('register'),
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+            'result' => $result,
+        ]);
     }
 }
